@@ -49,7 +49,22 @@ ApiStrategy {
         // Real stuff
         try {
             const dataJson = JSON.parse(cleanData);
-
+            if(dataJson?.choices?.[0]?.delta?.tool_calls?.[0]) {
+                const res = {
+                    functionCall: {
+                        name: dataJson.choices[0].delta.tool_calls[0].function.name, 
+                        args: JSON.parse(dataJson.choices[0].delta.tool_calls[0].function.arguments)
+                    }, 
+                    finished: dataJson.choices[0].finish_reason 
+                }
+                const functionCall = dataJson.choices[0].delta.tool_calls[0].function;
+                message.functionName = functionCall.name;
+                message.functionCall = functionCall.name;
+                const newContent = `\n\n[[ Function: ${functionCall.name}(${JSON.stringify(functionCall.args, null, 2)}) ]]\n`
+                message.rawContent += newContent;
+                message.content += newContent;
+                return res         
+            }
             // Error response handling
             if (dataJson.error) {
                 const errorMsg = `**Error**: ${dataJson.error.message || JSON.stringify(dataJson.error)}`;
