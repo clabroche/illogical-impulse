@@ -154,5 +154,42 @@ Item {
                 }
             }
         }
+
+        Loader {
+            active: true
+            visible: true
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: event => {
+                    Quickshell.execDetached(["hyprctl", "keyword", "monitorv2[DP-2]:disabled 1"]);
+                    Quickshell.execDetached(["hyprctl", "keyword", "monitorv2[DP-3]:disabled 1"]);
+                }
+                MaterialSymbol {
+                    horizontalAlignment: Qt.AlignHCenter
+                    fill: 0
+                    text: "screenshot_monitor"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnLayer2
+                }
+            }
+        }
+
+        Loader {
+            active: true
+            visible: true
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: event => {
+                    Quickshell.execDetached(["/home/coco/n/bin/node", "/home/coco/.config/hypr/scripts/node_modules/.bin/pm2", "restart", "daemons"]);
+                }
+                MaterialSymbol {
+                    horizontalAlignment: Qt.AlignHCenter
+                    fill: 0
+                    text: "restart_alt"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnLayer2
+                }
+            }
+        }
     }
 }
