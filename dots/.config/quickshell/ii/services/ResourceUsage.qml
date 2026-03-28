@@ -22,6 +22,15 @@ Singleton {
     property real cpuUsage: 0
     property var previousCpuStats
 
+    property real gpuUsage: 0
+    property real gpuMemoryUsed: 0
+    property real gpuMemoryTotal: 1
+    property real gpuMemoryUsedPercentage: gpuMemoryUsed / gpuMemoryTotal
+
+    property real netDownSpeed: 0  // bytes/s
+    property real netUpSpeed: 0    // bytes/s
+    property var previousNetStats: null
+
     property string maxAvailableMemoryString: kbToGbString(ResourceUsage.memoryTotal)
     property string maxAvailableSwapString: kbToGbString(ResourceUsage.swapTotal)
     property string maxAvailableCpuString: "--"
@@ -30,6 +39,7 @@ Singleton {
     property list<real> cpuUsageHistory: []
     property list<real> memoryUsageHistory: []
     property list<real> swapUsageHistory: []
+    property list<real> gpuUsageHistory: []
 
     function kbToGbString(kb) {
         return (kb / (1024 * 1024)).toFixed(1) + " GB";
@@ -53,10 +63,25 @@ Singleton {
             cpuUsageHistory.shift()
         }
     }
+    function updateGpuUsageHistory() {
+        gpuUsageHistory = [...gpuUsageHistory, gpuUsage]
+        if (gpuUsageHistory.length > historyLength) {
+            gpuUsageHistory.shift()
+        }
+    }
     function updateHistories() {
         updateMemoryUsageHistory()
         updateSwapUsageHistory()
         updateCpuUsageHistory()
+        updateGpuUsageHistory()
+    }
+
+    function netSpeedString(bytesPerSec) {
+        if (bytesPerSec >= 1024 * 1024)
+            return (bytesPerSec / (1024 * 1024)).toFixed(1) + " MB/s"
+        if (bytesPerSec >= 1024)
+            return (bytesPerSec / 1024).toFixed(0) + " KB/s"
+        return bytesPerSec.toFixed(0) + " B/s"
     }
 
 	Timer {
@@ -67,6 +92,7 @@ Singleton {
             // Reload files
             fileMeminfo.reload()
             fileStat.reload()
+            fileNetDev.reload()
 
             // Parse memory and swap usage
             const textMeminfo = fileMeminfo.text()
@@ -92,6 +118,27 @@ Singleton {
                 previousCpuStats = { total, idle }
             }
 
+            // Parse network speed from /proc/net/dev
+            const textNetDev = fileNetDev.text()
+            let totalRx = 0, totalTx = 0
+            const netLines = textNetDev.trim().split("\n").slice(2) // skip header lines
+            for (const line of netLines) {
+                const parts = line.trim().split(/\s+/)
+                const iface = parts[0].replace(":", "")
+                if (iface === "lo") continue
+                totalRx += Number(parts[1]) // rx_bytes
+                totalTx += Number(parts[9]) // tx_bytes
+            }
+            const intervalSecs = (Config.options?.resources?.updateInterval ?? 3000) / 1000
+            if (previousNetStats) {
+                netDownSpeed = Math.max(0, (totalRx - previousNetStats.rx) / intervalSecs)
+                netUpSpeed = Math.max(0, (totalTx - previousNetStats.tx) / intervalSecs)
+            }
+            previousNetStats = { rx: totalRx, tx: totalTx }
+
+            // Trigger nvidia-smi poll
+            gpuProc.running = true
+
             root.updateHistories()
             interval = Config.options?.resources?.updateInterval ?? 3000
         }
@@ -99,6 +146,23 @@ Singleton {
 
 	FileView { id: fileMeminfo; path: "/proc/meminfo" }
     FileView { id: fileStat; path: "/proc/stat" }
+    FileView { id: fileNetDev; path: "/proc/net/dev" }
+
+    Process {
+        id: gpuProc
+        command: ["nvidia-smi", "--query-gpu=utilization.gpu,memory.used,memory.total", "--format=csv,noheader,nounits"]
+        environment: ({ LANG: "C", LC_ALL: "C" })
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const parts = text.trim().split(/,\s*/)
+                if (parts.length >= 3) {
+                    root.gpuUsage = Number(parts[0]) / 100
+                    root.gpuMemoryUsed = Number(parts[1])
+                    root.gpuMemoryTotal = Number(parts[2]) || 1
+                }
+            }
+        }
+    }
 
     Process {
         id: findCpuMaxFreqProc

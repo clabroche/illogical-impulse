@@ -90,5 +90,54 @@ StyledPopup {
                 }
             }
         }
+
+        Column {
+            visible: Config.options.bar.resources.showNetworkSpeed
+            anchors.top: parent.top
+            spacing: 8
+
+            readonly property real maxBytesPerSec: Config.options.bar.resources.connectionSpeedMbps * 1000 * 1000 / 8
+
+            StyledPopupHeaderRow {
+                icon: "network_node"
+                label: Translation.tr("Network")
+            }
+            Column {
+                spacing: 4
+                StyledPopupValueRow {
+                    icon: "arrow_downward"
+                    label: Translation.tr("Down:")
+                    value: `${Math.round(ResourceUsage.netDownSpeed / parent.parent.maxBytesPerSec * 100)}% (${ResourceUsage.netSpeedString(ResourceUsage.netDownSpeed)})`
+                }
+                StyledPopupValueRow {
+                    icon: "arrow_upward"
+                    label: Translation.tr("Up:")
+                    value: `${Math.round(ResourceUsage.netUpSpeed / parent.parent.maxBytesPerSec * 100)}% (${ResourceUsage.netSpeedString(ResourceUsage.netUpSpeed)})`
+                }
+            }
+        }
+
+        Column {
+            anchors.top: parent.top
+            spacing: 8
+
+            StyledPopupHeaderRow {
+                icon: "developer_board"
+                label: "GPU"
+            }
+            Column {
+                spacing: 4
+                StyledPopupValueRow {
+                    icon: "bolt"
+                    label: Translation.tr("Load:")
+                    value: `${Math.round(ResourceUsage.gpuUsage * 100)}%`
+                }
+                StyledPopupValueRow {
+                    icon: "clock_loader_60"
+                    label: Translation.tr("VRAM:")
+                    value: `${Math.round(ResourceUsage.gpuMemoryUsedPercentage * 100)}% (${ResourceUsage.gpuMemoryUsed} / ${ResourceUsage.gpuMemoryTotal} MB)`
+                }
+            }
+        }
     }
 }

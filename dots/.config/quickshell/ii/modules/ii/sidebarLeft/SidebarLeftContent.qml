@@ -1,6 +1,7 @@
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.ii.sidebarLeft.lyrics
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -16,10 +17,12 @@ Item {
     property bool translatorEnabled: Config.options.sidebar.translator.enable
     property bool animeEnabled: Config.options.policies.weeb !== 0
     property bool animeCloset: Config.options.policies.weeb === 2
+    property bool lyricsEnabled: MprisController.activePlayer != null || Lyrics.found
     property var tabButtonList: [
         ...(root.aiChatEnabled ? [{"icon": "neurology", "name": Translation.tr("Intelligence")}] : []),
         ...(root.translatorEnabled ? [{"icon": "translate", "name": Translation.tr("Translator")}] : []),
-        ...((root.animeEnabled && !root.animeCloset) ? [{"icon": "bookmark_heart", "name": Translation.tr("Anime")}] : [])
+        ...((root.animeEnabled && !root.animeCloset) ? [{"icon": "bookmark_heart", "name": Translation.tr("Anime")}] : []),
+        {"icon": "lyrics", "name": Translation.tr("Lyrics")}
     ]
     property int tabCount: swipeView.count
 
@@ -88,6 +91,7 @@ Item {
                     ...(root.translatorEnabled ? [translator.createObject()] : []),
                     ...((root.tabButtonList.length === 0 || (!root.aiChatEnabled && !root.translatorEnabled && root.animeCloset)) ? [placeholder.createObject()] : []),
                     ...(root.animeEnabled ? [anime.createObject()] : []),
+                    lyrics.createObject(),
                 ]
             }
         }
@@ -103,6 +107,10 @@ Item {
         Component {
             id: anime
             Anime {}
+        }
+        Component {
+            id: lyrics
+            Lyrics {}
         }
         Component {
             id: placeholder

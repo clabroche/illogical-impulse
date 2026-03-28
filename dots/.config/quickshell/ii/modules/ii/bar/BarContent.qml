@@ -113,6 +113,18 @@ Item { // Bar content region
             anchors.verticalCenter: parent.verticalCenter
             implicitWidth: root.centerSideModuleWidth
 
+            CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: GlobalStates.oskOpen = !GlobalStates.oskOpen
+                MaterialSymbol {
+                    horizontalAlignment: Qt.AlignHCenter
+                    fill: 0
+                    text: "keyboard"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnLayer2
+                }
+            }
+
             Resources {
                 alwaysShowAllResources: root.useShortenedForm === 2
                 Layout.fillWidth: root.useShortenedForm === 2
@@ -157,7 +169,7 @@ Item { // Bar content region
         MouseArea {
             id: rightCenterGroup
             anchors.verticalCenter: parent.verticalCenter
-            implicitWidth: root.centerSideModuleWidth
+            implicitWidth: Math.max(root.centerSideModuleWidth, rightCenterGroupContent.implicitWidth)
             implicitHeight: rightCenterGroupContent.implicitHeight
 
             onPressed: {

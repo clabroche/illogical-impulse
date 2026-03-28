@@ -72,16 +72,64 @@ Item {
             }
         }
 
-        StyledText {
+        Item {
             visible: Config.options.bar.verbose
-            width: rowLayout.width - (CircularProgress.size + rowLayout.spacing * 2)
             Layout.alignment: Qt.AlignVCenter
-            Layout.fillWidth: true // Ensures the text takes up available space
+            Layout.fillWidth: true
             Layout.rightMargin: rowLayout.spacing
-            horizontalAlignment: Text.AlignHCenter
-            elide: Text.ElideRight // Truncates the text on the right
-            color: Appearance.colors.colOnLayer1
-            text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
+            implicitHeight: marqueeText.implicitHeight
+            clip: true
+
+            readonly property bool hasLyrics: Lyrics.lines.length > 0 && Lyrics.currentIndex >= 0
+            readonly property string lyricLine: hasLyrics ? (Lyrics.lines[Lyrics.currentIndex]?.text ?? "") : ""
+            readonly property string fallbackText: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
+
+            Text {
+                id: marqueeText
+                anchors.verticalCenter: parent.verticalCenter
+                font.pixelSize: Appearance.font.pixelSize.small
+                font.family: Appearance.font.family
+
+                readonly property color colOn: Appearance.colors.colOnLayer1
+                readonly property color colSub: Appearance.colors.colSubtext
+
+                function toCss(c) {
+                    return `rgb(${Math.round(c.r*255)},${Math.round(c.g*255)},${Math.round(c.b*255)})`
+                }
+
+                textFormat: parent.hasLyrics ? Text.RichText : Text.PlainText
+                color: colOn
+                text: {
+                    if (!parent.hasLyrics) return parent.fallbackText
+                    const wordIdx = Lyrics.currentWordIndex
+                    const cssOn = toCss(colOn)
+                    const cssSub = toCss(colSub)
+                    return parent.lyricLine.split(/\s+/).map((w, i) =>
+                        `<span style="color:${i <= wordIdx ? cssOn : cssSub};">${w}</span>`
+                    ).join(" ")
+                }
+
+                readonly property bool needsScroll: implicitWidth > parent.width
+                readonly property int wordCount: parent.hasLyrics
+                    ? parent.lyricLine.split(/\s+/).length : 1
+
+                // Quand lyrics : scroll proportionnel au mot courant
+                // Sinon : centré ou x=0
+                x: {
+                    if (!needsScroll) return (parent.width - implicitWidth) / 2
+                    if (!parent.hasLyrics) return 0
+                    const wordIdx = Lyrics.currentWordIndex
+                    const progress = wordCount > 1 ? wordIdx / (wordCount - 1) : 0
+                    return -Math.round(progress * (implicitWidth - parent.width))
+                }
+
+                Behavior on x {
+                    NumberAnimation {
+                        duration: 300
+                        easing.type: Easing.InOutQuad
+                    }
+                }
+            }
         }
 
     }

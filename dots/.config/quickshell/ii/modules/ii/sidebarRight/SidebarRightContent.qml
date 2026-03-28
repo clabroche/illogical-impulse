@@ -78,7 +78,7 @@ Item {
                 active: {
                     const configQuickSliders = Config.options.sidebar.quickSliders
                     if (!configQuickSliders.enable) return false
-                    if (!configQuickSliders.showMic && !configQuickSliders.showVolume && !configQuickSliders.showBrightness) return false;
+                    if (!configQuickSliders.showMic && !configQuickSliders.showVolume && !configQuickSliders.showBrightness && !configQuickSliders.showNightLight) return false;
                     return true;
                 }
                 sourceComponent: QuickSliders {}
@@ -273,6 +273,17 @@ Item {
                 }
                 StyledToolTip {
                     text: Translation.tr("Reload Hyprland & Quickshell")
+                }
+            }
+            QuickToggleButton {
+                toggled: false
+                buttonIcon: "tune"
+                onClicked: {
+                    GlobalStates.sidebarRightOpen = false;
+                    Quickshell.execDetached(["/home/coco/.config/hypr/scripts/pkg/settings/dist/linux-unpacked/front"]);
+                }
+                StyledToolTip {
+                    text: Translation.tr("App Settings")
                 }
             }
             QuickToggleButton {

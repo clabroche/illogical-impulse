@@ -244,9 +244,13 @@ Singleton {
                 property JsonObject resources: JsonObject {
                     property bool alwaysShowSwap: true
                     property bool alwaysShowCpu: true
+                    property bool alwaysShowGpu: true
+                    property bool showNetworkSpeed: true
+                    property int connectionSpeedMbps: 1000
                     property int memoryWarningThreshold: 95
                     property int swapWarningThreshold: 85
                     property int cpuWarningThreshold: 90
+                    property int gpuWarningThreshold: 90
                 }
                 property list<string> screenList: [] // List of names, like "eDP-1", find out with 'hyprctl monitors' command
                 property JsonObject utilButtons: JsonObject {
@@ -540,6 +544,7 @@ Singleton {
                     property bool showMic: false
                     property bool showVolume: true
                     property bool showBrightness: true
+                    property bool showNightLight: true
                 }
             }
 

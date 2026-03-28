@@ -38,11 +38,38 @@ MouseArea {
         Resource {
             iconName: "planner_review"
             percentage: ResourceUsage.cpuUsage
-            shown: Config.options.bar.resources.alwaysShowCpu || 
+            shown: Config.options.bar.resources.alwaysShowCpu ||
                 !(MprisController.activePlayer?.trackTitle?.length > 0) ||
                 root.alwaysShowAllResources
             Layout.leftMargin: shown ? 6 : 0
             warningThreshold: Config.options.bar.resources.cpuWarningThreshold
+        }
+
+        Resource {
+            iconName: "developer_board"
+            percentage: ResourceUsage.gpuUsage
+            shown: Config.options.bar.resources.alwaysShowGpu ||
+                root.alwaysShowAllResources
+            Layout.leftMargin: shown ? 6 : 0
+            warningThreshold: Config.options.bar.resources.gpuWarningThreshold
+        }
+
+        Resource {
+            readonly property real maxBytesPerSec: Config.options.bar.resources.connectionSpeedMbps * 1000 * 1000 / 8
+            iconName: "arrow_downward"
+            percentage: ResourceUsage.netDownSpeed / maxBytesPerSec
+            shown: Config.options.bar.resources.showNetworkSpeed ||
+                root.alwaysShowAllResources
+            Layout.leftMargin: shown ? 6 : 0
+        }
+
+        Resource {
+            readonly property real maxBytesPerSec: Config.options.bar.resources.connectionSpeedMbps * 1000 * 1000 / 8
+            iconName: "arrow_upward"
+            percentage: ResourceUsage.netUpSpeed / maxBytesPerSec
+            shown: Config.options.bar.resources.showNetworkSpeed ||
+                root.alwaysShowAllResources
+            Layout.leftMargin: shown ? 6 : 0
         }
 
     }

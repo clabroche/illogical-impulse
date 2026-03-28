@@ -57,9 +57,9 @@ Rectangle {
             active: Config.options.sidebar.quickSliders.showVolume
             sourceComponent: QuickSlider {
                 materialSymbol: "volume_up"
-                value: Audio.sink.audio.volume
+                value: Audio.sink?.audio?.volume ?? 0
                 onMoved: {
-                    Audio.sink.audio.volume = value
+                    if (Audio.sink?.audio) Audio.sink.audio.volume = value
                 }
             }
         }
@@ -76,6 +76,28 @@ Rectangle {
                 value: Audio.source.audio.volume
                 onMoved: {
                     Audio.source.audio.volume = value
+                }
+            }
+        }
+
+        Loader {
+            anchors {
+                left: parent.left
+                right: parent.right
+            }
+            visible: active
+            active: Config.options.sidebar.quickSliders.showNightLight
+            sourceComponent: QuickSlider {
+                materialSymbol: value <= 0.05 ? "wb_sunny" : value >= 0.95 ? "routine" : "wb_twilight"
+                // Slider 0=6500K (off/cool), 1=1200K (warm)
+                readonly property int minTemp: 1200
+                readonly property int maxTemp: 6500
+                value: 1 - (Config.options.light.night.colorTemperature - minTemp) / (maxTemp - minTemp)
+                onMoved: {
+                    const temp = Math.round(maxTemp - value * (maxTemp - minTemp))
+                    Config.options.light.night.colorTemperature = temp
+                    if (value > 0.02 && !Hyprsunset.active) Hyprsunset.toggle(true)
+                    else if (value <= 0.02 && Hyprsunset.active) Hyprsunset.toggle(false)
                 }
             }
         }

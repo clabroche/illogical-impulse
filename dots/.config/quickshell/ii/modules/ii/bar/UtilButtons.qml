@@ -1,4 +1,5 @@
 import qs
+import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import QtQuick
@@ -19,6 +20,22 @@ Item {
 
         spacing: 4
         anchors.centerIn: parent
+
+        Loader {
+            active: Config.options.bar.utilButtons.showKeyboardToggle
+            visible: Config.options.bar.utilButtons.showKeyboardToggle
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: GlobalStates.oskOpen = !GlobalStates.oskOpen
+                MaterialSymbol {
+                    horizontalAlignment: Qt.AlignHCenter
+                    fill: 0
+                    text: "keyboard"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnLayer2
+                }
+            }
+        }
 
         Loader {
             active: Config.options.bar.utilButtons.showScreenSnip
@@ -62,22 +79,6 @@ Item {
                     horizontalAlignment: Qt.AlignHCenter
                     fill: 1
                     text: "colorize"
-                    iconSize: Appearance.font.pixelSize.large
-                    color: Appearance.colors.colOnLayer2
-                }
-            }
-        }
-
-        Loader {
-            active: Config.options.bar.utilButtons.showKeyboardToggle
-            visible: Config.options.bar.utilButtons.showKeyboardToggle
-            sourceComponent: CircleUtilButton {
-                Layout.alignment: Qt.AlignVCenter
-                onClicked: GlobalStates.oskOpen = !GlobalStates.oskOpen
-                MaterialSymbol {
-                    horizontalAlignment: Qt.AlignHCenter
-                    fill: 0
-                    text: "keyboard"
                     iconSize: Appearance.font.pixelSize.large
                     color: Appearance.colors.colOnLayer2
                 }
@@ -188,6 +189,105 @@ Item {
                     text: "restart_alt"
                     iconSize: Appearance.font.pixelSize.large
                     color: Appearance.colors.colOnLayer2
+                }
+            }
+        }
+
+        Loader {
+            active: true
+            visible: true
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: Quickshell.execDetached(["/home/coco/.config/hypr/scripts/pkg/settings/dist/linux-unpacked/front"])
+                MaterialSymbol {
+                    horizontalAlignment: Qt.AlignHCenter
+                    fill: 0
+                    text: "settings"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.colors.colOnLayer2
+                }
+            }
+        }
+
+        Loader {
+            id: updatesLoader
+            active: Updates.available
+            visible: Updates.available
+
+            property bool popupOpen: false
+
+            sourceComponent: Item {
+                implicitWidth: updatesBtn.implicitWidth
+                implicitHeight: updatesBtn.implicitHeight
+                Layout.alignment: Qt.AlignVCenter
+
+                CircleUtilButton {
+                    id: updatesBtn
+                    anchors.fill: parent
+                    onClicked: {
+                        if (Updates.checking && Updates.count === 0) {
+                            return;
+                        }
+                        updatesLoader.popupOpen = !updatesLoader.popupOpen
+                    }
+
+                    Item {
+                        anchors.centerIn: parent
+                        implicitWidth: icon.implicitWidth
+                        implicitHeight: icon.implicitHeight
+
+                        MaterialSymbol {
+                            id: icon
+                            horizontalAlignment: Qt.AlignHCenter
+                            fill: Updates.count > 0 ? 1 : 0
+                            text: Updates.checking ? "sync" : "system_update_alt"
+                            iconSize: Appearance.font.pixelSize.large
+                            color: Updates.updateStronglyAdvised
+                                ? Appearance.colors.colError
+                                : Updates.updateAdvised
+                                    ? Appearance.colors.colTertiary
+                                    : Appearance.colors.colOnLayer2
+
+                            RotationAnimator on rotation {
+                                running: Updates.checking
+                                from: 0; to: 360
+                                duration: 1200
+                                loops: Animation.Infinite
+                            }
+                        }
+
+                        Rectangle {
+                            visible: Updates.count > 0 && !Updates.checking
+                            anchors {
+                                right: parent.right
+                                bottom: parent.bottom
+                                margins: -1
+                            }
+                            implicitWidth: Math.max(countLabel.implicitWidth + 4, 14)
+                            implicitHeight: 14
+                            radius: height / 2
+                            color: Updates.updateStronglyAdvised
+                                ? Appearance.colors.colError
+                                : Appearance.colors.colTertiary
+
+                            Text {
+                                id: countLabel
+                                anchors.centerIn: parent
+                                text: Updates.count > 99 ? "99+" : Updates.count
+                                font.pixelSize: 8
+                                font.bold: true
+                                color: Updates.updateStronglyAdvised
+                                    ? Appearance.m3colors.m3onError
+                                    : Appearance.m3colors.m3onTertiary
+                            }
+                        }
+                    }
+                }
+
+                UpdatesPopup {
+                    show: updatesLoader.popupOpen
+                    anchorItem: updatesBtn
+                    closeAction: function() { updatesLoader.popupOpen = false }
                 }
             }
         }
